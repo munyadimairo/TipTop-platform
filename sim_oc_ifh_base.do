@@ -1,40 +1,39 @@
-
 cap prog drop sim_ifh
 cap prog define sim_ifh, rclass
 version 18
 *************************** notes***********************************************
 * Author 			:		Munya Dimairo (mdimairo@gmail.com/m.dimairo@sheffield.ac.uk
-* Program details	:		a) binary co-primary outcomes with only futility early stopping 
-* 					:		b) reduction in event rate is a better patient outcome
-* 					:		c) both co-primary outcomes must be statistically significant to claim evidence of benefit
-*					:		d) assumes random correlation between co-primary outcomes  
+* Program details		:		a) binary co-primary outcomes with only futility early stopping 
+* 				:		b) reduction in event rate is a better patient outcome
+* 				:		c) both co-primary outcomes must be statistically significant to claim evidence of benefit
+*				:		d) assumes random correlation between co-primary outcomes  
 ********************************************************************************
 ****************************program dependencies********************************
 * none!!  
 
 ****************************program syntax**************************************
-syntax [, NSIMS(int 10) N_c(int 1) N_t(int 1) 								///
-		PC_y1(real 0.5) PC_y2(real 0.5) 									///
-		RD_y1(real 0.05) RD_y2(real 0.05)									///
-		SIM_rd_y1(real 0) SIM_rd_y2(real 0)									///
-		INTERIMS(int 1) INTERIM_if(string) 									///
-		FUT_criteria_y1(string) FUT_criteria_y2(string) 					///
+syntax [, NSIMS(int 10) N_c(int 1) N_t(int 1) 						///
+		PC_y1(real 0.5) PC_y2(real 0.5) 					///
+		RD_y1(real 0.05) RD_y2(real 0.05)					///
+		SIM_rd_y1(real 0) SIM_rd_y2(real 0)					///
+		INTERIMS(int 1) INTERIM_if(string) 					///
+		FUT_criteria_y1(string) FUT_criteria_y2(string) 			///
 		FUT_spec_method(string) ALPHAF_y1(real 0.05) ALPHAF_y2(real 0.05) 	///
 		SEEDSIM(int 12356) target_power(real 0.9)]
 
 ****************************syntax arguments *********************************** 
-* nsims 				: number of simulations
-* n_c, n_t				: total number of participants per treatment group assuming no early stopping (control, treatment)
-* pc_y(1/2)				: control event rates for the co-primary outcomes
-* rd_y(1/2)				: targeted risk differences for the co-primary outcomes
-* sim_rd_y(1/2)			: assumed risk differences for the co-primary outcomes used for simulating trial data
-* interims				: number of interim analyses including final analysis
-* interim_if			: interim analyses information fraction including the final analysis
-* fut_spec_method		: futility specification method: only allows pvalue, critvalue, or riskdiff
+* nsims 		: number of simulations
+* n_c, n_t		: total number of participants per treatment group assuming no early stopping (control, treatment)
+* pc_y(1/2)		: control event rates for the co-primary outcomes
+* rd_y(1/2)		: targeted risk differences for the co-primary outcomes
+* sim_rd_y(1/2)		: assumed risk differences for the co-primary outcomes used for simulating trial data
+* interims		: number of interim analyses including final analysis
+* interim_if		: interim analyses information fraction including the final analysis
+* fut_spec_method	: futility specification method: only allows pvalue, critvalue, or riskdiff
 * fut_criteria_y(1/2)	: futility stopping criteria at each interim analysis as a vector list (exclude final analysis) 
-* alpha_y(1/2)			: threshold for declaring statistical significance for the co-primary outcomes (on p-value scale)
-* seedsim				: simulation seed to produce reproducible operating characteristics (OC)
-* target_power 			: target power - just for reference when reviewing OCs
+* alpha_y(1/2)		: threshold for declaring statistical significance for the co-primary outcomes (on p-value scale)
+* seedsim		: simulation seed to produce reproducible operating characteristics (OC)
+* target_power 		: target power - just for reference when reviewing OCs
 
 *****************************arguments checks***********************************
 
@@ -197,7 +196,7 @@ while (`k' <= `interims') {
 * convert futility boundaries to different scale at each interim to aid communication with different stakeholders
 local listmat "rd_futthresh zcrit_futthresh pval_futthresh"
 foreach mat_name in `listmat'	{
-	mat def `mat_name' 		= 	J(`futstages', 2, .)
+	mat def `mat_name' 	= 	J(`futstages', 2, .)
 	mat colnames `mat_name'	= 	y1 y2 
 	local rownames
 	forvalues k = 1(1)`futstages'{
@@ -210,22 +209,22 @@ forvalues j = 1(1)2 {
 	tokenize `fut_criteria_y`j''
 	local k 1
 	while (`k' <= `futstages') {
-		local stderr_rd 	= 	sqrt( ((1 -`pc_y`j'')/ `nc`k'') + ((1 -`pt_y`j'_h1')/ `nt`k''))
+		local stderr_rd 	=  sqrt( ((1 -`pc_y`j'')/ `nc`k'') + ((1 -`pt_y`j'_h1')/ `nt`k''))
 		if ("`fut_spec_method'" == "critvalue") {
-			local rd`k'_y`j' 				=  ``k'' * `stderr_rd'
-			mat rd_futthresh[`k', `j'] 		= 	`rd`k'_y`j'' 
+			local rd`k'_y`j' 		=  ``k'' * `stderr_rd'
+			mat rd_futthresh[`k', `j'] 	= 	`rd`k'_y`j'' 
 			mat zcrit_futthresh[`k', `j']	=	``k''
 			mat pval_futthresh[`k', `j']	= 	normal(``k'')
 		}
 		if ("`fut_spec_method'" == "pvalue") {
-			mat pval_futthresh[`k', `j']	=	``k''
-			mat rd_futthresh[`k', `j'] 		= 	invnormal(``k'')* `stderr_rd'
-			mat zcrit_futthresh[`k', `j']	=	-invnormal(``k'')
+			mat pval_futthresh[`k', `j']	= ``k''
+			mat rd_futthresh[`k', `j'] 	= invnormal(``k'')* `stderr_rd'
+			mat zcrit_futthresh[`k', `j']	= -invnormal(``k'')
 		}
 		if ("`fut_spec_method'" == "riskdiff") {
-			mat rd_futthresh[`k', `j']		=	``k''
-			mat pval_futthresh[`k', `j'] 	= 	normal((``k'') / `stderr_rd')
-			mat zcrit_futthresh[`k', `j']	=	``k'' / `stderr_rd'
+			mat rd_futthresh[`k', `j']	= ``k''
+			mat pval_futthresh[`k', `j'] 	= normal((``k'') / `stderr_rd')
+			mat zcrit_futthresh[`k', `j']	= ``k'' / `stderr_rd'
 		}
 	local ++k
 	}
@@ -237,10 +236,10 @@ foreach mat_name in `listmat' {
 
 * initialise metrics to capture at each interim and final analyses 
 forvalues k = 1(1)`interims' {
-	local stopfut`k' 		0  						/* number of trials stopping early for futility each stage of analysis including finalysis (i.e., futility claim at final stage k) */
-	local success`k' 		0						/* number of trials with significant result at each stage: note that stage k-1 are redudant when there is no efficacy early stopping */
+	local stopfut`k' 		0  	/* number of trials stopping early for futility each stage of analysis including finalysis (i.e., futility claim at final stage k) */
+	local success`k' 		0	/* number of trials with significant result at each stage: note that stage k-1 are redudant when there is no efficacy early stopping */
 	if (`k' <= `futstages') {
-		local proceed`k' 	0 						/* number of trials that progresses at each interim stage*/
+		local proceed`k' 	0 	/* number of trials that progresses at each interim stage*/
 	}
 }
 
@@ -282,46 +281,46 @@ while (`sim' <= `nsims') {
 										
 		* run interim analysis (difference in proportions) and apply futility rules
 		forvalues j = 1(1)2 {
-		 	local level_y`j' 	= (1 - (`alphaf_y`j''))*100 			/* two-sided sig level */
+		 	local level_y`j' 	= (1 - (`alphaf_y`j''))*100 	/* two-sided sig level */
 			* test for difference between proportions with normal approximation and extract results 
 			qui glm y`j' i.trt, family(bin) link(identity) level(`level_y`j'')
-			local diff_y`j' 	= 	r(table)[1,2] 				/* difference in proportions */
-			local zcrit_y`j' 	= 	r(table)[3,2]				/* z critical value */
-			local pval_y`j' 	=   normal(r(table)[3,2]) 		/* lower one-sided p-value */
-			local p_y`j'		= 	r(table)[4,2]				/* two-sided p-value */
-			local lb_y`j' 		= 	r(table)[5, 2]				/* lower confidence limit */
-			local ub_y`j' 		= 	r(table)[6, 2]				/* upper confidence limit */
+			local diff_y`j' 	= 	r(table)[1,2] 		/* difference in proportions */
+			local zcrit_y`j' 	= 	r(table)[3,2]		/* z critical value */
+			local pval_y`j' 	=   normal(r(table)[3,2]) 	/* lower one-sided p-value */
+			local p_y`j'		= 	r(table)[4,2]		/* two-sided p-value */
+			local lb_y`j' 		= 	r(table)[5, 2]		/* lower confidence limit */
+			local ub_y`j' 		= 	r(table)[6, 2]		/* upper confidence limit */
 		 }
 		 if (`k' < `interims') {
 				if ("`fut_spec_method'" == "riskdiff") {
 					if ((`diff_y1' >= `fut`k'_y1') & (`diff_y2' >= `fut`k'_y2')) {
 						local ++stopfut`k'
-						continue, break											/* stop execution and exit/terminates while loop (no further interim analysis) to start continue simulation */
+						continue, break	 	/* stop execution and exit/terminates while loop (no further interim analysis) to start continue simulation */
 					}
 					else {
-						local ++proceed`k' 										/* proceed to the next interim analysis */
+						local ++proceed`k' 	/* proceed to the next interim analysis */
 					}
 				}
 				if ("`fut_spec_method'" == "pvalue") {
 					if ((`pval_y1' >= `fut`k'_y1') & (`pval_y2' >= `fut`k'_y2')) {
-						local ++stopfut`k'
-						continue, break											/* stop execution and exit/terminates while loop (no further interim analysis) to start continue simulation */
+						local ++stopfut`k'				
+						continue, break		/* stop execution and exit/terminates while loop (no further interim analysis) to start continue simulation */
 					}
 					else {
-						local ++proceed`k'										/* proceed to the next interim analysis */
+						local ++proceed`k'	/* proceed to the next interim analysis */
 					}
 				}
 				if ("`fut_spec_method'" == "critvalue") {
 					if ((`zcrit_y1' >= `fut`k'_y1') & (`zcrit_y2' >= `fut`k'_y2')) {
 						local ++stopfut`k'
-						continue, break											/* stop execution and exit/terminates while loop (no further interim analysis) to start continue simulation */
+						continue, break		/* stop execution and exit/terminates while loop (no further interim analysis) to start continue simulation */
 					}
 					else {
-						local ++proceed`k'										/* proceed to the next interim analysis */
+						local ++proceed`k'	/* proceed to the next interim analysis */
 					}
 				}
 		 }
-		 else if (`k' == `interims') {											/* final stage at maximum sample size */
+		 else if (`k' == `interims') {				/* final stage at maximum sample size */
 		 		if (((`pval_y1' < `alphaf_y1'/2) & (`rd_y1' > `lb_y1')) & ((`pval_y2' < `alphaf_y2'/2) & (`rd_y2' > `lb_y2'))) { 		/* based on a two-sided test at final as direction of test is irrelevant except for early stopping */
 					local ++success`k'
 				}
@@ -329,33 +328,33 @@ while (`sim' <= `nsims') {
 					local ++stopfut`k'
 				}
 		 }
-		local ++k 							/* interim increment */
+		local ++k 						/* interim increment */
 	}
 	local ++seed							/* seed increment so that each simulation will be different and reproducible */
-	local ++sim								/* number of simulations  increment */
+	local ++sim							/* number of simulations  increment */
 }
 
 * return scalars for use post running this program 
-ret scalar NSims 				= 	`nsims'
+ret scalar NSims 			= 	`nsims'
 forvalues j=1(1)2{
 	ret scalar alpha_y`j' 		=	`alphaf_y`j''
-	ret scalar pc_y`j'			= 	`pc_y`j''
-	ret scalar rd_y`j'			=	`rd_y`j'' 
+	ret scalar pc_y`j'		= 	`pc_y`j''
+	ret scalar rd_y`j'		=	`rd_y`j'' 
 	ret scalar sim_rd_y`j'		=	`sim_rd_y`j''
 }
-ret scalar N_C					= 	`n_c'
-ret scalar N_T					= 	`n_t'
-ret local fut_spec 				= 	strlower("`fut_spec_method'")
+ret scalar N_C				= 	`n_c'
+ret scalar N_T				= 	`n_t'
+ret local fut_spec 			= 	strlower("`fut_spec_method'")
 ret scalar target_power			=	`target_power'
 
 * initialise matrices to save results and important stats 
 foreach mat_name in futstop proceed success stage_N  {
 	if ("`mat_name'" != "stage_N") {
-		mat def `mat_name'		  		=  J(`interims', 1, .) 	/* prob of futility stopping and efficacy (success) at each interim (note that success here is only relevant at the final stage as there is no futility early stopping) */
+		mat def `mat_name'		  	=  J(`interims', 1, .) 	/* prob of futility stopping and efficacy (success) at each interim (note that success here is only relevant at the final stage as there is no futility early stopping) */
 		mat colnames `mat_name'			= 	`mat_name'
 	}
 	else if ("`mat_name'" == "stage_N") {
-		mat def `mat_name'				=  J(`interims', 3, .)  /* initialise matrix to save information fraction and actual sample sizes at each interim */
+		mat def `mat_name'			=  J(`interims', 3, .)  /* initialise matrix to save information fraction and actual sample sizes at each interim */
 		mat colnames `mat_name'			= 	frac n_c n_t
 	} 
 }
@@ -374,8 +373,8 @@ local k 1
 while (`k' <= `interims') {
 	ret scalar interim_`k'		= 	`iaf`k''
 	mat stage_N[`k', 1] 		= 	`iaf`k''
-	mat stage_N[`k', 2]			=   `nc`k''
-	mat stage_N[`k', 3]			=   `nt`k''
+	mat stage_N[`k', 2]		=   `nc`k''
+	mat stage_N[`k', 3]		=   `nt`k''
 		
 	mat futstop[`k', 1] 		= 	round((`stopfut`k''/ `nsims'), 0.0001)
 	ret scalar stopfut_`k' 		= 	round((`stopfut`k''/ `nsims'), 0.0001)
@@ -383,7 +382,7 @@ while (`k' <= `interims') {
 	mat success[`k', 1] 		= 	round((`success`k''/ `nsims'), 0.0001)
 		
 	if (`k' == `interims') {
-		ret scalar success 		= 	round((`success`k''/ `nsims'), 0.0001) /* for convenience return success at the end as the design as no efficacy early stopping */
+		ret scalar success 	= 	round((`success`k''/ `nsims'), 0.0001) /* for convenience return success at the end as the design as no efficacy early stopping */
 	}
 	local ++k
 }	
@@ -396,26 +395,25 @@ while (`k' <= `futstages') {
 }
 
 foreach mat_name in futstop proceed success stage_N {
-	ret mat `mat_name'			= 	`mat_name'
+	ret mat `mat_name'		= 	`mat_name'
 }
 
 
-end 														/* end of program */
+end 		/* end of program */
 
 ex
 
 * example on how to run the program assuming 4 interim analyses and display results stored in matrices
-sim_ifh, nsims(5000) n_c(912) n_t(912) 				///
-		pc_y1(0.12) pc_y2(0.25)						///
+sim_ifh, nsims(5000) n_c(912) n_t(912) 					///
+		pc_y1(0.12) pc_y2(0.25)					///
 		rd_y1(-0.045) rd_y2(-0.09375) 				///
-		sim_rd_y1(-0.045) sim_rd_y2(-0.09375) 		///
-		interims(5) interim_if(0.35 0.50 0.70 0.85 1) 			///
+		sim_rd_y1(-0.045) sim_rd_y2(-0.09375) 			///
+		interims(5) interim_if(0.35 0.50 0.70 0.85 1) 		///
 		fut_criteria_y1(0 0 0 0) fut_criteria_y2(0 0 0 0)	///
-		fut_spec_method(riskdiff)					///
+		fut_spec_method(riskdiff)				///
 		alphaf_y1(0.05) alphaf_y2(0.05) 			///
 		seedsim(2504879) target_power(0.9) 
 
-		
 return list
 foreach mat_name in futstop proceed success stage_N pval_futthresh zcrit_futthresh rd_futthresh {
 	mat list r(`mat_name')
