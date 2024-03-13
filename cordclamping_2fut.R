@@ -1,44 +1,44 @@
 ################################################################################
 # Author        : Munya Dimairo (Sheffield CTRU)
-# Date          : 21/09/2023 
 # Project       : Perinatal Platform::cord clamping research question
 # Design        : two-arm parallel group with a binary outcome 
-#               : (survival without brain injury at xx of randomisation)
+#               : (survival without brain injury at day 7 of randomisation)
 # Adaptations   : futility (safety) early stopping:: 2 interim analyses 
 #               : (timing and decision rules are investigated through simulation)
 # key packages  : rpact, tidyverse, knitr, xlsx
 ################################################################################
 
-#install.packages("rpact")
-#install.packages("tidyverse")
-#### load packages
+#install packages
+install.packages("rpact")
+install.packages("tidyverse")
+
+#load packages
 library(rpact)
 packageVersion("rpact")
-
 library(tidyverse)
 library(plotly)
 library(knitr)
 library(xlsx)
 ls()
-# setting working directory
-setwd(paste0("X:/HAR_PR/PR/Perinatal_Platform/General/Cord Clamping/Stats/Outputs"))
+
+# setting your working directory by adding directory path
+setwd(paste0("directory path"))
 
 ######################### set up simulation scenarios#############################################
 # create a list of elements for use : interim timing and decision rules
 # t1,t2 = information fraction of the 1st and 2nd interim analysis: note t2 > t1 E (0,1]
 # fut1 and fut2 are the futility threshold (z value scale) at the 1st and 2nd interim analysis: fut2 >= fut1 
-# underlying survival rate in the treatment group (85% to 94%) (can be updated)
+# underlying survival rate in the treatment group (85% to 93.5%) (can be updated)
 output<- input.par <- expand.grid(
-                     t1 = c(0.40, 0.45, 0.50),
-                     t2 = c(0.60, 0.65, 0.70, 0.75), 
-                     fut1 = c(0), 
-                     fut2 = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7),
-                     trt.p = c(0.85, 0.86, 0.872, 0.88, 0.89, 0.90, 0.917, 0.925, 0.935)
+        t1 = c(0.40, 0.45, 0.50),
+        t2 = c(0.60, 0.65, 0.70, 0.75), 
+        fut1 = c(0), 
+        fut2 = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7),
+        trt.p = c(0.85, 0.86, 0.872, 0.88, 0.89, 0.90, 0.917, 0.925, 0.935)
 )
-
 dim(output)
-
 output$trt.p[1]
+
 #filter scenarios that meet the above conditions: fut2 >= fut1 is redundant if fut1is a vector of one element 
 output <- subset(output,  t2 > t1 & t2 - t1 >= 0.19 & t2 - t1 <= 0.26 &  fut2 >= fut1)
 output
@@ -52,7 +52,7 @@ dim(output)
 # - 2.5% type I error and 90% power
 
 # set number of simulations and seed for use later on
-NSim  <- 50000 #10e5
+NSim  <- 50000
 Nseed <- 25397889
 
 # set the assumed control and intervention event rates
@@ -74,7 +74,6 @@ fixed.design.ss <- getSampleSizeRates(
   riskRatio = TRUE,
   thetaH0 = 1,
 )
-
 fixed.design.ss
 
 ################################################################################
@@ -84,9 +83,7 @@ fixed.design.ss
 # 90% power, 2.5% type I error
 ################################################################################
 
-
 for(i in 1:dim(output)[1]) {
-   
    input <- output[i,]
    
    # treatment effect on absolute risk difference scale and control event rate
@@ -99,21 +96,20 @@ for(i in 1:dim(output)[1]) {
    ###################### set up design given specified input parameters ############################################################
    # design feeds into sample size calculation and simulations stages below 
    design.fut <- getDesignGroupSequential(
-              kMax = 3,
-              alpha = a,
-              beta = b,
-              sided = 1,
-              informationRates = c(input$t1[1], input$t2[1], 1),
-              futilityBounds = c(input$fut1[1], input$fut2[1]),
-              typeOfDesign = "asUser",
-              typeBetaSpending = "none",
-              userAlphaSpending = c(0, 0, a),
-              bindingFutility = NA,
-              twoSidedPower = FALSE,
-              tolerance = 1e-08
-)
+        kMax = 3,
+        alpha = a,
+        beta = b,
+        sided = 1,
+        informationRates = c(input$t1[1], input$t2[1], 1),
+        futilityBounds = c(input$fut1[1], input$fut2[1]),
+        typeOfDesign = "asUser",
+        typeBetaSpending = "none",
+        userAlphaSpending = c(0, 0, a),
+        bindingFutility = NA,
+        twoSidedPower = FALSE,
+         tolerance = 1e-08
+    )
    design.fut
-
    
 ####################### get the sample sizes of the above set up design (no continuous correction)####################################
    # sample sizes to be used as input parameters for simulation below  
@@ -126,7 +122,7 @@ for(i in 1:dim(output)[1]) {
            riskRatio = TRUE,
            thetaH0 = 1,
            allocationRatioPlanned = 1
-         )
+    )
    ss.fut
          
    # total number of subjects per each stage and final analysis
@@ -177,16 +173,12 @@ for(i in 1:dim(output)[1]) {
    output[i, "exp.ss"]          <- ceiling(sim$expectedNumberOfSubjects)
    output[i, "exp.ss.rat.max"]  <- round(sim$expectedNumberOfSubjects / ss.fut$numberOfSubjects[3], 3)
    output[i, "exp.ss.rat.fix"]  <- round(sim$expectedNumberOfSubjects / fixed.design.ss$maxNumberOfSubjects, 3)
-   
-   
+      
    print(i)
 
-
 if(i == dim(output)[1]) message("HOORAY .... Simulations Done!!!!")
-   
 
 } ; rm(i, input, sim, design.fut, ss.fut)
-
 
 
 results <- data.frame(output)
@@ -196,32 +188,5 @@ results$interim <- paste(results$t1,":",results$t2)
 results$fut <- paste(results$fut1,":",results$fut2)
 results$fut.thr.pv <- paste(results$fut.thr.pv1,":",results$fut.thr.pv2)
 
+# save results for later use without rerunning simulations
 save(results, file = "results_2fut_final.RData")
-
-#################################### plot results for visualisation #######################################################################
-# to be completed (thanks to Esther for the code)
-# need a figure that shows how futility probability (futstop) changes as a function of:
-# 1) - futility thresholds at interims in combination (fut.1, futt2)
-# 2) - timing of interims in combination (t1, t2)
-# 3) - underlying treatment effect (RD)
-
-
-results %>% 
-  mutate(
-    interims = paste(fut1,":", fut2),
-    timepoints = paste(t1,":", t2)
-  ) %>% 
-  plot_ly(
-    x = ~timepoints, y = ~RD, z = ~futstop, 
-    color = ~interims
-  ) %>%
-  add_markers() %>%
-  layout(
-    scene = list(xaxis = list(title = 'Timing of 1st & 2nd interim analyses'),
-                 yaxis = list(title = 'Underlying treatment effect (RD)'),
-                 zaxis = list(title = 'Early futility probability')),
-    legend = list(title=list(text = 'Futility Thresholds (1st: 2nd interims)'))
-  )
-
-
-#############################################################################
