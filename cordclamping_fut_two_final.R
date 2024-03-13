@@ -1,4 +1,4 @@
-# !final design options 
+# !final design options with 500 000 simulations
 ################################################################################
 # Author        : Munya Dimairo (Sheffield CTRU)
 # Project       : Perinatal Platform::cord clamping research question
