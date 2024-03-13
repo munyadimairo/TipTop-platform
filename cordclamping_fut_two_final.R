@@ -1,7 +1,6 @@
 # !final design options 
 ################################################################################
 # Author        : Munya Dimairo (Sheffield CTRU)
-# Date          : 27/10/2023 
 # Project       : Perinatal Platform::cord clamping research question
 # Design        : two-arm, group sequential, parallel group with a binary outcome 
 #               : (survival without brain injury at 7 days of delivery)
@@ -10,9 +9,9 @@
 # key packages  : rpact, tidyverse, knitr, xlsx
 ################################################################################
 
-#### install packages
-#install.packages("rpact")
-#install.packages("tidyverse")
+# install packages
+install.packages("rpact")
+install.packages("tidyverse")
 
 # load packages and check rpact package version 
 library(rpact)
@@ -24,20 +23,19 @@ library(knitr)
 library(xlsx)
 ls()
 
-# setting working directory
-setwd(paste0("X:/HAR_PR/PR/Perinatal_Platform/General/Cord Clamping/Stats/Outputs"))
+# setting your working directory buy replacing folder path
+setwd(paste0("folder path"))
 
 ######################### set up simulation scenarios#############################################
 # create a list of elements for use : interim timing, decision rules, and
 # underlying event rate in the cord clamping (DCC, intervention) group (85% to 93.5%)
 output<- input.par <- expand.grid(
-                  t1 = c(0.45, 0.50),
-                  t2 = c(0.65, 0.70, 0.75), 
-                  fut1 = c(0), 
-                  fut2 = c(0, 0.6),
-                  trt.p = c(0.85, 0.86, 0.872, 0.88, 0.89, 0.90, 0.917, 0.925, 0.935)
+          t1 = c(0.45, 0.50),
+          t2 = c(0.65, 0.70, 0.75), 
+          fut1 = c(0), 
+          fut2 = c(0, 0.6),
+          trt.p = c(0.85, 0.86, 0.872, 0.88, 0.89, 0.90, 0.917, 0.925, 0.935)
 )
-
 dim(output)
 
 #filter scenarios of interest: interim analyses with spacing E [20%, 25%];
@@ -71,7 +69,6 @@ fixed.design.ss <- getSampleSizeRates(
   riskRatio = TRUE,
   thetaH0 = 1,
 )
-
 fixed.design.ss
 
 ################################################################################
@@ -81,20 +78,19 @@ fixed.design.ss
 # 90% power, 2.5% type I error
 ################################################################################
 # set number of simulations and seed for use within the loop
-NSim  <- 500000 #10e6
+NSim  <- 500000
 Nseed <- 25397889
 
 # start looping to cover all simulation scenarios set up above 
 for(i in 1:dim(output)[1]) {
-  
-  input <- output[i,]
+    input <- output[i,]
   
   # save the control event rate and treatment effect on absolute risk difference scale 
-  output[i, "control"]     <- p0
-  output[i, "rd"]    <- round(input$trt.p[1] - p0, 4)   
+  output[i, "control"] <- p0
+  output[i, "rd"]      <- round(input$trt.p[1] - p0, 4)   
   
   # save total sample size for a fixed design from above (constant across scenarios)
-  output[i, "Nfix"] <- ceiling(fixed.design.ss$maxNumberOfSubjects)
+  output[i, "Nfix"]   <- ceiling(fixed.design.ss$maxNumberOfSubjects)
   
 ###################### set up design given specified input parameters ############################################################
 # design that feeds into sample size calculation and simulations stages below 
@@ -172,7 +168,7 @@ for(i in 1:dim(output)[1]) {
   output[i, "power"] <- round(sim$overallReject*100, 3)
   
   # save expected sample size and its ratio to the maximum sample size and that of the fixed design (without trial adaptations/interim analyses)
-  output[i, "exp.ss"]            <- ceiling(sim$expectedNumberOfSubjects)
+  output[i, "exp.ss"]          <- ceiling(sim$expectedNumberOfSubjects)
   output[i, "exp.ss.rat.max"]  <- round(sim$expectedNumberOfSubjects / ss.fut$numberOfSubjects[3], 3)
   output[i, "exp.ss.rat.fix"]  <- round(sim$expectedNumberOfSubjects / fixed.design.ss$maxNumberOfSubjects, 3)
   
@@ -200,5 +196,4 @@ results$futprob.1.2 <- paste(results$futstop.1,":",results$futstop.2)
 #save simulation results as RData file for later use 
 save(results, file = "ss_fut_two_finalresults.RData")
 
-#export simulation results to excel
-write.xlsx(results, "X:/HAR_PR/PR/Perinatal_Platform/General/Cord Clamping/Stats/Outputs/SS_fut_two_finalresults.xlsx")
+###################### end of file #####################
