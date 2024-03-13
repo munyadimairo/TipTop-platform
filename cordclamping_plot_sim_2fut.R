@@ -1,7 +1,6 @@
 ###############################################################################
 # task                  : plots simulation results for a design with two interim analyses
-# code dependencies     : cordclamping_fut_2interims_all_v1 in directory "X:\HAR_PR\PR\Perinatal_Platform\General\Cord Clamping\Programs"
-#                       : this file produces "results_2fut_final.RData" file with simulation results
+# code dependencies     : cordclamping_2fut.R (which produces "results_2fut_final.RData" file with simulation results)
 ###############################################################################
 # load packages
 library(tidyverse)
@@ -9,8 +8,8 @@ library(plotly)
 library(knitr)
 
 #################################### plot results for visualization #######################################################################
-# setting working directory
-setwd(paste0("X:/HAR_PR/PR/Perinatal_Platform/General/Cord Clamping/Stats/Outputs"))
+# setting your working directory by adding directory path
+setwd(paste0("directory path"))
 load("results_2fut_final.RData")
 
 # filter results for sample size related metrics which depends on the MCID only so other RD scenarios are redundant
@@ -18,7 +17,7 @@ load("results_2fut_final.RData")
 results.ss <- subset(results,  RD>=0.045 & RD<=0.0451)
 results.ss
 
-####### impact on claiming superiority in the end (equates to overall power under H1 and type I error under H1)
+#impact on claiming superiority in the end (equates to overall power under H1 and type I error under H1)
 
 png('power_t2_fut2.png') # one facet_grid
 ggplot(data = results, aes(x = RD, y = power, 
@@ -177,4 +176,4 @@ ggplot(data = results, aes(x = RD, y = exp.ss.rat.fix,
 dev.off()
 
 
-#### end of data visualization 
+#end of data visualization 
