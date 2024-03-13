@@ -2,14 +2,14 @@ cap prog drop sim_ifh
 cap prog define sim_ifh, rclass
 version 18
 *************************** notes***********************************************
-* Author 			:		Munya Dimairo (mdimairo@gmail.com/m.dimairo@sheffield.ac.uk
-* Program details		:		a) binary co-primary outcomes with only futility early stopping 
-* 				:		b) reduction in event rate is a better patient outcome
-* 				:		c) both co-primary outcomes must be statistically significant to claim evidence of benefit
-*				:		d) assumes random correlation between co-primary outcomes  
+* Author 		:	Munya Dimairo (mdimairo@gmail.com/m.dimairo@sheffield.ac.uk)
+* Program details	:	a) binary co-primary outcomes with only futility early stopping 
+* 			:	b) reduction in event rate is a better patient outcome
+* 			:	c) both co-primary outcomes must be statistically significant to claim evidence of benefit
+*			:	d) assumes random correlation between co-primary outcomes  
 ********************************************************************************
 ****************************program dependencies********************************
-* none!!  
+* none beyond Stata v18 defaults!!  
 
 ****************************program syntax**************************************
 syntax [, NSIMS(int 10) N_c(int 1) N_t(int 1) 						///
