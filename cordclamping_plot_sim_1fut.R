@@ -1,7 +1,6 @@
 ###############################################################################
 # task                  : plots simultation results for one interim analysis
-# code dependencies     : cordclamping_fut_one_v1.R in directory "X:\HAR_PR\PR\Perinatal_Platform\General\Cord Clamping\Programs"
-#                       : this file produces "results_1fut_final.RData" file with simulation results
+# code dependencies     : cordclamping_1fut.R (which produces "results_1fut_final.RData" file with simulation results)
 ###############################################################################
 # load packages
 library(tidyverse)
@@ -9,8 +8,8 @@ library(plotly)
 library(knitr)
 
 #################################### plot results for visualization #######################################################################
-# setting working directory
-setwd(paste0("X:/HAR_PR/PR/Perinatal_Platform/General/Cord Clamping/Stats/Outputs"))
+# setting your working directory by adding directory path
+setwd(paste0("directory path"))
 load("results_1fut_final.RData")
 
 # filter results for sample size related metrics which depends on the MCID only so other RD scenarios are redundant
@@ -18,7 +17,7 @@ load("results_1fut_final.RData")
 results.ss <- subset(results,  rd>=0.045 & rd<=0.0451)
 results.ss
 
-####### impact on claiming superiority in the end (equates to overall power under H1 and type I error under H1)
+#impact on claiming superiority in the end (equates to overall power under H1 and type I error under H1)
 
 png('power_t_fut.png') # one facet_grid
 ggplot(data = results, aes(x = rd, y = power, 
@@ -38,7 +37,6 @@ ggplot(data = results, aes(x = rd, y = power,
   ylab("Probability of claiming superiority")
 dev.off()
 
-
 # impact on futility early stopping (critical value scale)
 
 png('futprob_t_fut_crit.png')
@@ -57,8 +55,6 @@ ggplot(data = results, aes(x = rd, y = futstop.1,
   xlab("Risk difference") +
   ylab("Probability of futility early stopping")
 dev.off()
-
-
 
 ###############################################################################
 # impact on expected sample size
@@ -94,7 +90,6 @@ ggplot(data = results, aes(x = rd, y = exp.ss,
   xlab("Risk difference") +
   ylab("Expected sample size")
 dev.off()
-
 
 ################################################################################
 # maximum sample sizes: by interim and futility threshold
@@ -156,5 +151,4 @@ ggplot(data = results, aes(x = rd, y = exp.ss.rat.fix,
   ylab("Ratio of the expected sample size to the fixed design sample size")
 dev.off()
 
-
-#### end of data visualization 
+#end of data visualization 
